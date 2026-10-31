@@ -1,0 +1,425 @@
+.\" crystal_phonons(1) -- 2D lattice-dynamics playground
+.TH CRYSTAL_PHONONS 1 "October 2026" "crystal_phonons 2.0" "User Commands"
+.SH NAME
+crystal_phonons \- interactive 2D phonon simulator with dispersion, S(k,\(*w), baths and defects
+.SH SYNOPSIS
+.B crystal_phonons
+.RB [ \-n
+.IR N ]
+.RB [ \-d
+.IR demo ]
+.RB [ \-s
+.IR seed ]
+.RB [ \-o
+.IR dir ]
+.RB [ \-\-shot
+.I file
+.RB [ \-\-frames
+.IR K ]]
+.br
+.B crystal_phonons \-\-selftest
+.br
+.B crystal_phonons
+.RB [ \-h | \-V ]
+.SH DESCRIPTION
+.B crystal_phonons
+integrates the classical equations of motion of an
+.IR N \(mu N
+square lattice of atoms joined by springs and draws the result live.
+The left half of the window shows the lattice; the right half shows
+the analytic phonon dispersion along \(*G\(enX\(enM\(en\(*G with the
+.I measured
+dynamic structure factor S(k,\(*w) underneath it, a Brillouin-zone map of
+the energy in every normal mode, tabbed parameter sliders, a lower plot,
+and live diagnostics.
+.PP
+The model includes nearest-neighbour longitudinal and transverse springs,
+diagonal next-nearest-neighbour central springs, Fermi\(enPasta\(enUlam
+\(*a and \(*b anharmonicity, a checkerboard two-atom basis, random mass
+disorder, point defects (heavy and light atoms, vacancies), a driven
+atom, Langevin heat baths, and four boundary conditions.
+Waves can be launched by clicking on the dispersion plot or the
+Brillouin-zone map, or by poking the lattice with the mouse.
+.SH OPTIONS
+.TP
+.BI \-n " N"
+Lattice side.
+Must be a power of two between 16 and 512; default 64.
+The
+.B N
+key cycles through 32, 64, 128 and 256 at run time.
+.TP
+.BI \-d " name\fR, " \-\-demo " name"
+Start in one of the demos listed under
+.BR DEMOS .
+.TP
+.BI \-s " seed"
+Seed for the random number generator (thermal velocities, Langevin noise,
+mass disorder); default 42.
+.TP
+.BI \-o " dir"
+Directory for recorded videos and screenshots; default the current
+directory.
+.TP
+.BI \-\-shot " file"
+Run for
+.I K
+frames, save a BMP screenshot of the window to
+.IR file ,
+and exit.
+Useful with
+.B \-\-demo
+for scripted images.
+.TP
+.BI \-\-frames " K"
+Number of frames before
+.BR \-\-shot ;
+default 120.
+.TP
+.B \-\-selftest
+Run the numerical validation suite without opening a window and exit
+with status 0 if every check passes.
+See
+.BR VALIDATION .
+.TP
+.BR \-h ", " \-\-help
+Print a usage summary.
+.TP
+.BR \-V ", " \-\-version
+Print the version.
+.SH WINDOW LAYOUT
+.TP
+.B Lattice (left)
+Atoms drawn as squares (sized by mass), as bonds coloured by
+longitudinal strain, or as a smooth heat map of a scalar field.
+Overlays show the heat-bath strips, the absorbing sponge, the driven
+atom, and a crosshair that moves at the predicted group velocity of the
+last wave packet.
+.TP
+.B Dispersion (top centre)
+Analytic \(*w(k) for every branch along \(*G\(enX\(enM\(en\(*G.
+The yellow marker is the selected k; the short yellow segment is the
+tangent, whose slope is the group velocity.
+A dashed line marks the driver frequency.
+With
+.B S
+on, the measured S(k,\(*w) is drawn underneath on a logarithmic,
+per-column-normalised colour scale.
+.TP
+.B Mode energy (top right)
+Harmonic energy in each normal mode over the full Brillouin zone
+(\(*G at the centre, k\dy\u up), log scale, from a 2D FFT of the
+displacement and velocity fields every frame.
+For a two-atom basis the reduced zone is outlined in green.
+.TP
+.B Sliders (middle)
+Four tabs: Lattice, Excite, Thermal, View (see
+.BR PARAMETERS ).
+.TP
+.B Lower plot
+Cycled with
+.B L
+or a click: energy time series (E, KE, PE, and the fraction of E in the
+modes k, 2k, 3k, 4k for the selected k); the column-averaged temperature
+profile T(x); or the quantum heat capacity C\dv\u(T) on log\(enlog axes.
+.TP
+.B Diagnostics (bottom right)
+Time, total energy and its relative drift (closed systems only),
+KE/PE, effective temperature, quantum C\dv\u at the target kT, group
+velocity of the selected branch, heat currents (wall baths) or maximum
+displacement, S(k,\(*w) progress, atom count, frame rate.
+.SH PARAMETERS
+.SS Lattice tab
+.TP
+.B K_L, K_T
+Nearest-neighbour longitudinal and transverse spring constants.
+.TP
+.B K_D
+Diagonal (next-nearest-neighbour) central spring.
+Couples the x and y polarisations; with
+.B K_T
+= 0 it gives a central-force lattice with a finite shear modulus.
+.TP
+.B \(*a, \(*b
+FPU cubic and quartic terms on the stretch of nearest-neighbour bonds:
+V(s) = \(12K\dL\u s\u2\d + \(*a s\u3\d/3 + \(*b s\u4\d/4.
+A negative or large \(*a without \(*b makes the potential unbounded;
+runaway motion is detected and reset.
+.TP
+.B m_B/m_A
+Mass ratio of a checkerboard two-atom basis.
+Away from 1 the dispersion shows four branches and an optical gap.
+.TP
+.B disorder
+Each mass is multiplied by 1 + w\(*x, \(*x uniform in (\-1,1), frozen
+per site.
+.SS Excite tab
+.TP
+.B amp
+Amplitude of excitations and pokes.
+.TP
+.B \(*s_packet
+Gaussian width of wave packets, in lattice spacings.
+.TP
+.B \(*s_poke
+Radius of mouse pokes.
+.TP
+.B \(*w_drive, F_drive
+Frequency and force amplitude of the driven atom.
+.SS Thermal tab
+.TP
+.B kT
+Target temperature for
+.B T
+(one-shot Maxwell\(enBoltzmann) and for the global Langevin bath.
+.TP
+.B kT_hot, kT_cold
+Temperatures of the hot and cold wall baths.
+.TP
+.B \(*g
+Langevin friction coefficient.
+.SS View tab
+.TP
+.B exaggerate
+Factor applied to displacements when drawing.
+.TP
+.B colour gain
+Multiplies the colour scale.
+.TP
+.B steps / frame
+Verlet steps per displayed frame (simulation speed).
+.SH KEYS
+.TP 14
+.B Space
+Pause or resume.
+.TP
+.B .
+Single step while paused.
+.TP
+.B 1 2 3 4
+Excite branch 1\(en4 at the selected k with the current shape.
+.TP
+.B Enter
+Excite the selected branch again.
+.TP
+.B Arrows
+Move the selected k by one grid point.
+.TP
+.B E
+Excitation shape: standing wave, travelling wave, wave packet.
+.TP
+.B A
+Toggle additive excitations (add to the current state instead of
+replacing it).
+.TP
+.B T
+Draw Maxwell\(enBoltzmann velocities at kT.
+.TP
+.B H
+Bath: off, global Langevin, hot/cold walls.
+With periodic boundaries the cold strip sits at x = N/2 so the two
+reservoirs are not adjacent across the seam.
+.TP
+.B B
+Boundary: periodic, fixed, free, absorbing (fixed walls plus a graded
+friction sponge).
+.TP
+.BR D ", " Shift+D
+Colour field: |u|, u\dx\u, u\dy\u, |v|, kinetic energy, div u,
+curl u, mass (log\d2\u).
+.TP
+.B G
+Style: atoms, bonds, heat map.
+.TP
+.B C
+Colour scale: auto (slow exponential tracking, so changes in amplitude
+stay visible for a second or two), locked, fixed.
+.TP
+.BR S ", " Shift+S
+Show or hide the measured S(k,\(*w); clear its accumulator.
+.TP
+.B L
+Cycle the lower plot.
+.TP
+.BR Tab ", " Shift+Tab
+Mouse tool: poke, heavy atom (\(mu4), light atom (\(mu\(14), vacancy,
+driver, erase.
+.TP
+.B P
+Driver polarisation, x or y.
+.TP
+.BR N ", " Shift+N
+Lattice size up or down (clears motion and defects).
+.TP
+.BR R ", " Shift+R
+Reset motion; reset everything to defaults.
+.TP
+.B V
+Start or stop video capture.
+.TP
+.B I
+Save a BMP screenshot.
+.TP
+.BR F1 ", " ?
+Help overlay.
+.TP
+.B F2 \(en F10
+Demos (see
+.BR DEMOS ).
+.TP
+.BR Q ", " Esc
+Quit.
+.SH MOUSE
+.TP 14
+.B Lattice, left
+Apply the current tool.
+The poke tool gives a radial displacement pulse on click and pushes
+atoms along the drag direction while dragging.
+Defect tools paint while dragging.
+.TP
+.B Lattice, right
+Poke, whatever the tool.
+.TP
+.B Dispersion, left
+Snap to the nearest allowed k on the path and excite the branch whose
+\(*w is closest to the click.
+.TP
+.B Dispersion, right
+Set the driver frequency to the clicked \(*w (places a driver at the
+centre if there is none).
+.TP
+.B Mode map, left / right
+Select the clicked k and excite the selected branch / select only.
+.TP
+.B Sliders
+Drag, or use the mouse wheel to nudge.
+.TP
+.B Lower plot
+Click to cycle.
+.SH DEMOS
+.TP 12
+.BR F2 " packet"
+LA wave packet; crests move at the phase velocity, the envelope and the
+crosshair at the group velocity.
+.TP
+.BR F3 " focusing"
+Point pulse on a strongly anisotropic lattice (N = 256, absorbing):
+crossed elliptical fronts and lattice caustics.
+.TP
+.BR F4 " fput"
+Fermi\(enPasta\(enUlam\(enTsingou with \(*a = 1: energy flows from mode k
+to 2k, 3k, .\|.\|. and back (lower plot).
+.TP
+.BR F5 " breathers"
+\(*b-FPU zone-boundary mode; modulational instability produces
+localized breathers.
+.TP
+.BR F6 " impurity"
+A light atom with a local mode above \(*w\dmax\u keeps ringing after
+everything else has been absorbed.
+.TP
+.BR F7 " disorder"
+Driven atom in a strongly mass-disordered lattice; high-frequency waves
+stay near the source.
+.TP
+.BR F8 " heat"
+Harmonic crystal between hot and cold walls: a flat interior T(x)
+(ballistic transport).
+Raising \(*b produces a gradient (Fourier's law).
+.TP
+.BR F9 " diatomic"
+m\dB\u/m\dA\u = 3 with the measured S(k,\(*w) shown; thermal noise
+fills in all four branches and the gap.
+.TP
+.BR F10 " driven"
+Driver inside the band radiates; set its frequency above
+\(*w\dmax\u (right-click the dispersion plot) and the radiation stops.
+.SH PHYSICS
+Units: lattice spacing a = 1, reference mass m\dA\u = 1, \(*h = k\dB\u = 1
+where quantum quantities appear.
+.PP
+A bond along x between sites i and j carries
+.RS
+U = \(12K\dL\u s\u2\d + \(*a s\u3\d/3 + \(*b s\u4\d/4 + \(12K\dT\u t\u2\d,
+.RE
+with s = u\dx,j\u \- u\dx,i\u and t = u\dy,j\u \- u\dy,i\u (x and y
+swap roles for bonds along y).
+A diagonal bond with unit vector e carries \(12K\dD\u (e\(pc\(*Du)\u2\d.
+The harmonic dynamical matrix is real in the e\u\fIi\fPk\(pcr\d
+convention with true site positions; it is 2\(mu2 (monatomic) or 4\(mu4
+(two-atom basis) and is diagonalised by Jacobi rotations.
+Frequencies, eigenvectors and group velocities used for excitations and
+plots come from it.
+.PP
+Integration is velocity Verlet with \(*Dt = 0.04.
+Baths use an exact Ornstein\(enUhlenbeck velocity update after each
+Verlet step.
+S(k,\(*w) is the Hann-windowed power spectrum of u(k,t) along the path,
+sampled every 6 steps over 512 samples (\(*D\(*w \(~~ 0.051,
+Nyquist \(~~ 13.1) and accumulated over windows with 75% overlap.
+The quantum C\dv\u(T) sums the Einstein function over every normal mode
+of the ideal crystal; classical molecular dynamics itself always obeys
+equipartition (Dulong\(enPetit).
+.SH VALIDATION
+.B \-\-selftest
+checks: the eigensolver against the closed-form 2\(mu2 result;
+standing-wave period against 2\(*p/\(*w; frequency and branch purity of
+oblique travelling waves with K\dD\u coupling and of optical modes of the
+two-atom basis; F = \-\(gr PE at every site for all four boundary
+conditions with \(*a, \(*b, K\dD\u, vacancies and defects; energy
+conservation of the anharmonic system; packet speed against the group
+velocity; Langevin temperature; the Dulong\(enPetit and T\u2\d limits of
+C\dv\u; and the position of the S(k,\(*w) peaks.
+.SH ENVIRONMENT
+.TP
+.B PHONONS_FONT
+Path of the proportional .ttf font (default: DejaVu Sans, or Arial on
+macOS).
+.TP
+.B PHONONS_FONT_MONO
+Path of the monospaced font (default: DejaVu Sans Mono, or Menlo on
+macOS).
+.SH FILES
+.TP
+.I phonons_YYYYMMDD_HHMMSS.mp4
+Video written by
+.B V
+in the output directory (requires
+.BR ffmpeg (1)
+with libx264).
+.TP
+.I phonons_YYYYMMDD_HHMMSS.bmp
+Screenshot written by
+.BR I .
+.SH EXIT STATUS
+0 on normal exit or when every self-test passes; 1 on initialisation
+failure or a failed self-test; 2 on bad arguments.
+.SH EXAMPLES
+.TP
+.B crystal_phonons \-n 128
+Start with a 128\(mu128 lattice.
+.TP
+.B crystal_phonons \-\-demo diatomic
+Watch the optical branches appear in the measured S(k,\(*w).
+.TP
+.B crystal_phonons \-\-demo focusing \-\-shot focus.bmp \-\-frames 240
+Render one image of the focusing demo and exit.
+.SH NOTES
+The window uses a fixed 1600\(mu900 logical layout and scales to fit the
+display.
+Video frames are read back before the buffer swap; recording stops if the
+window is resized.
+The browser build
+.RB ( "make wasm" )
+has no video capture or screenshots.
+.SH SEE ALSO
+.BR ffmpeg (1)
+.PP
+N. W. Ashcroft and N. D. Mermin,
+.IR "Solid State Physics" ,
+ch. 22\(en23;
+E. Fermi, J. Pasta, S. Ulam and M. Tsingou, Los Alamos report LA-1940 (1955);
+S. Lepri, R. Livi and A. Politi, "Thermal conduction in classical
+low-dimensional lattices", Phys. Rep. 377, 1 (2003).
+.SH AUTHOR
+Mico Mrkaic.
